@@ -13,11 +13,51 @@ import ensemble
 import ranking
 import summarize
 from utils import db_utils
+import numpy as np
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def s0_linear(pred, x, c_multiplier=1):
+    "Calculate the linear score for a given x, L, and U."
+    L,U = pred[0], pred[1]
+    d = 1
+    U_trim = U 
+    L_trim = L  
+    c = c_multiplier * (U_trim - L_trim)
+    
+    if x < L:
+        score = (L - x) / c
+    elif L <= x <= U:
+        score = 0
+    elif x > U:
+        score = (x - U) / c
+    
+    s_final = 1 - 10 * ( 0.8*(1/2) * ((U - L) / c) + score )
+    
+    return s_final
+
+
+def s0_oom(pred, x, c_multiplier=1):
+    "Calculate the order of magnitude score for a given x, L, and U."
+    L,U = pred[0], pred[1]
+
+    d = 1
+    U_trim = U 
+    L_trim = L  
+    c = c_multiplier * np.log(U_trim / L_trim)
+    
+    if x < L:
+        score = np.log(L / x) / c
+    elif L <= x <= U:
+        score = 0
+    elif x > U:
+        score = np.log(x / U) / c
+    
+    s_final = 1 - 10 * ( 0.8*(1/2) * (np.log(U / L) / c) + score )
+    
+    return s_final
 
 def to_eval(question, retrieval_number, output_dir):
     """
@@ -66,6 +106,7 @@ async def retrieve_and_forecast(
     reason_config=DEFAULT_REASONING_CONFIG,
     calculate_alignment=False,
     return_articles=False,
+    metric = 'brier'
 ):
     """
     Asynchronously evaluates the forecasting question using the end-to-end system.
@@ -104,6 +145,16 @@ async def retrieve_and_forecast(
     question_dates = question_dict["question_dates"]
     retrieval_dates = question_dict["retrieval_dates"]
     urls_in_background = question_dict["urls_in_background"]
+    
+    if metric == 'brier':
+        score = lambda base_prediction,answer:  (base_prediction - answer) ** 2
+    elif metric == 'ci_linear':
+        score = lambda base_prediction,answer: s0_linear(base_prediction,answer) # TODO: update with c_multiplier
+    elif metric == 'ci_oom':
+        score = lambda base_prediction,answer: s0_oom(base_prediction,answer) # TODO: update with c_multiplier
+    else:
+        raise NotImplementedError(f"Metric {metric} not implemented")
+    
     # Information retrieval
     try:
         (
