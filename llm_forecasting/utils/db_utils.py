@@ -49,10 +49,11 @@ def upload_data_structure_to_s3(s3, data_structure, bucket, s3_path):
         temp_file = f"temp{hash}.{extension}"
         with open(temp_file, "wb") as f:
             pickle.dump(data_structure, f)
+        import ipdb; ipdb.set_trace()
 
         s3.upload_file(temp_file, bucket, s3_path)
-        os.remove(temp_file)
-        logging.info(f"Successfully uploaded data to {bucket}/{s3_path}")
+        # os.remove(temp_file)
+        logging.info(f"Successfully uploaded data to {bucket}/{s3_path}: local_file: {temp_file}")
     except Exception as e:
         logging.error(f"Error uploading data to {bucket}/{s3_path}. Error: {e}")
 

@@ -83,7 +83,23 @@ Can you now transform this question for clarity: {question}
 Please place stars around the transformed question.
 
 Your output should take the following structure:
-Before: {insert the original question}
-After: *{insert the transformed question}*""",
+Before: <insert the original question>
+After: *<insert the transformed question>*""",
     ("QUESTION",),
 )
+
+TIME_TO_FLOAT_PROMPT = (
+    """ I have a question and candidate confidence interval that I need to reformat:
+
+Question: {question}
+Candidate CI: {candidate_ci}
+Can you now transform this answer which is formatted as a time into the requested correct format? 
+
+Please place stars around the transformed answer.
+
+The answer should be in the format: 
+Before: <insert candidate CI>
+After: *<insert the transformed CI>*""",
+    ("QUESTION","CANDIDATE_CI"),
+)
+

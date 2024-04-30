@@ -77,3 +77,46 @@ Instructions:
         "BASE_REASONINGS",
     ),
 )
+
+
+ENSEMBLE_PROMPT_QUANT_0 = (
+    """I need your assistance with making a forecast. Here is the question and its metadata.
+Question: {question}
+
+Background: {background}
+
+Resolution criteria: {resolution_criteria}
+
+Today's date: {date_begin}
+Question close date: {date_end}
+
+I have retrieved the following information about this question.
+Retrieved Info:
+{retrieved_info}
+
+In addition, I have generated a collection of other responses and reasonings from other forecasters:
+{base_reasonings}
+
+Your goal is to aggregate the information and make a final prediction.
+
+Instructions:
+1. Provide reasons why the answer might be high.
+{{ Insert your thoughts here }}
+
+2. Provide reasons why the answer might be low.
+{{ Insert your thoughts here }}
+
+3. Aggregate your considerations.
+{{ Insert your aggregated considerations here }}
+
+4. Output your prediction (an 80 percent confidence in the format [lowerbound, upperbound]) with an asterisk at the beginning and end of the confidence interval (e.g. '*[1.8,5.3]*').
+{{ Insert the confidence interval here }}""",
+    (
+        "QUESTION",
+        "BACKGROUND",
+        "RESOLUTION_CRITERIA",
+        "RETRIEVED_INFO",
+        "DATES",
+        "BASE_REASONINGS",
+    ),
+)

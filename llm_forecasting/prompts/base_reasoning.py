@@ -637,3 +637,160 @@ Instructions:
 {{ Insert your answer }}""",
     ("QUESTION", "BACKGROUND", "RESOLUTION_CRITERIA", "DATES", "RETRIEVED_INFO"),
 )
+
+
+
+BINARY_SCRATCH_PAD_PROMPT_QUANT_1 = (
+    """Question:
+{question}
+
+Question Background:
+{background}
+
+Resolution Criteria:
+{resolution_criteria}
+
+Today's date: {date_begin}
+Question close date: {date_end}
+
+We have retrieved the following information for this question:
+{retrieved_info}
+
+
+Instructions:
+1. Write down any additional relevant information that is not included above. This should be specific facts that you already know the answer to, rather than information that needs to be looked up.
+{{ Insert additional information }}
+
+2. Provide at least 3 reasons why the answer might be small.
+{{ Insert your thoughts }}
+
+3. Provide at least 3 reasons why the answer might be large.
+{{ Insert your thoughts }}
+
+4. Rate the strength of each of the reasons given in the last two responses. Think like a superforecaster (e.g. Nate Silver).
+{{ Insert your rating of the strength of each reason }}
+
+5. Aggregate your considerations.
+{{ Insert your aggregated considerations }}
+
+6. Output your prediction (an 80 percent confidence in the format [lowerbound, upperbound]) with an asterisk at the beginning and end of the confidence interval (e.g. '*[1.8,5.3]*').
+Ensure the bounds are expressed as floating point numbers. If it's a time-based question, follow the original question to determine if it's in minutes, hours, days, etc.
+{{ Insert your answer }}""",
+    ("QUESTION", "BACKGROUND", "RESOLUTION_CRITERIA", "DATES", "RETRIEVED_INFO"),
+)
+
+
+BINARY_SCRATCH_PAD_PROMPT_QUANT_2 = (
+    """Question:
+{question}
+
+Question Background:
+{background}
+
+Resolution Criteria:
+{resolution_criteria}
+
+Today's date: {date_begin}
+Question close date: {date_end}
+
+We have retrieved the following information for this question:
+{retrieved_info}
+
+
+Think step by step: {{ Insert your step by step consideration }}
+Aggregating considerations: {{ Aggregate your considerations }}
+Ensure the bounds are expressed as floating point numbers. If it's a time-based question, follow the original question to determine if it's in minutes, hours, days, etc.
+Answer: {{ Output your prediction (an 80 percent confidence in the floating point format [lowerbound, upperbound]) with an asterisk at the beginning and end of the confidence interval (e.g. '*[1.8,5.3]*') }}""",
+    ("QUESTION", "BACKGROUND", "RESOLUTION_CRITERIA", "DATES", "RETRIEVED_INFO"),
+)
+
+
+
+BINARY_SCRATCH_PAD_PROMPT_QUANT_3 = (
+    """Question: {question}
+
+Question Background:
+{background}
+
+Resolution Criteria:
+{resolution_criteria}
+
+Today's date: {date_begin}
+Question close date: {date_end}
+
+We have retrieved the following information for this question:
+{retrieved_info}
+
+
+Instructions:
+1. Given the above question, rephrase and expand it to help you do better answering. Maintain all information in the original question.
+{{ Insert rephrased and expanded question.}}
+
+2. Provide a few reasons why the answer might be high. Rate the strength of each reason.
+{{ Insert your thoughts }}
+
+3. Provide a few reasons why the answer might be low. Rate the strength of each reason.
+{{ Insert your thoughts }}
+
+4. Aggregate your considerations. Think like a superforecaster (e.g. Nate Silver).
+{{ Insert your aggregated considerations }}
+
+5. Output an initial 80 percent confidence interval (prediction) given steps 1-4.
+{{ Insert initial confidence interval. }}
+
+6. Feel free to adjust your probability now. Here is a non-exhaustive list of some things you'll want to check:
+- Is your calculated probability excessively confident or not confident enough?
+- Is there anything else that might affect the forecast that you did not before consider (e.g. base rate of the event)?
+- Use your intuition and feel for the question.
+{{ Insert your thoughts }}
+
+7. Output your final 80 percent confidence interval ( in the format [lowerbound, upperbound]) with an asterisk at the beginning and end of the confidence interval (e.g. '*[1.8,5.3]*')
+Ensure the bounds are expressed as floating point numbers. If it's a time-based question, follow the original question to determine if it's in minutes, hours, days, etc.
+{{ Insert your answer }}""",
+    ("QUESTION", "BACKGROUND", "RESOLUTION_CRITERIA", "DATES", "RETRIEVED_INFO"),
+)
+
+BINARY_SCRATCH_PAD_PROMPT_QUANT_6 = (
+    """Question:
+{question}
+
+Question Background:
+{background}
+
+Resolution Criteria:
+{resolution_criteria}
+
+Today's date: {date_begin}
+Question close date: {date_end}
+
+We have retrieved the following information for this question:
+{retrieved_info}
+
+
+Instructions:
+1. Given the above question, rephrase and expand it to help you do better answering. Maintain all information in the original question.
+{{ Insert rephrased and expanded question.}}
+
+2. Develop a decision tree outlining possible paths to both high value and low value outcomes.
+{{ Insert decision tree outline }}
+
+3. Analyze the 80 percent confidence interval of each branch of the decision tree based on current information.
+{{ Insert branch confidence interval analysis }}
+
+4. Discuss any potential game-changers or wildcard events. Use your knowledge of the topic as well as the information provided.
+{{ Insert discussion on wildcards }}
+
+5. Output an initial 80 percent confidence interval (prediction) given steps 1-4.
+{{ Insert initial confidence interval. }}
+
+6. Feel free to adjust your confidence interval now. Here is a non-exhaustive list of some things you'll want to check:
+- Is your calculated confidence interval is excessively confident or not confident enough.
+- Is there anything else that might affect the forecast that you did not before consider.
+- Use your intuition and feel for the question.
+{{ Insert your thoughts }}
+
+7. Output your final 80 percent confidence interval ( in the format [lowerbound, upperbound]) with an asterisk at the beginning and end of the confidence interval (e.g. '*[1.8,5.3]*')
+Ensure the bounds are expressed as floating point numbers. If it's a time-based question, follow the original question to determine if it's in minutes, hours, days, etc.
+{{ Insert your answer }}""",
+    ("QUESTION", "BACKGROUND", "RESOLUTION_CRITERIA", "DATES", "RETRIEVED_INFO"),
+)

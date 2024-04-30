@@ -98,6 +98,7 @@ async def meta_reason(
     """
     assert answer_type in [
         "probability",
+        "confidence_interval",
         "tokens",
     ], "answer_type must be either 'probability' or 'tokens'"
     assert aggregation_method in [
@@ -272,13 +273,42 @@ def aggregate_base_reasonings(
         reasoning=concatenate_reasonings(flattened_base_reasonings),
         resolution_criteria=resolution_criteria,
     )
+    # print (meta_full_prompt)
     meta_reasoning = model_eval.get_response_from_model(
         model_name=model_name,
         prompt=meta_full_prompt,
         temperature=meta_temperature,
     )  # raw response
     # Extract final prediction from raw response
-    if answer_type == "probability":
+    if answer_type == "confidence_interval":
+        meta_prediction = string_utils.extract_ci_with_stars(meta_reasoning) # this doesn't postprocess
+        prompt, fields = PROMPT_DICT["data_wrangling"]["time_to_float"]
+        if (":" in meta_prediction[0] or ":" in meta_prediction[1]):
+            convert_to_float_prompt = string_utils.get_prompt(
+            prompt,
+            fields,
+            question=question,
+            candidate_ci=str(meta_prediction))
+            # print("======REFORMATTING PROMPT======")
+            # print (convert_to_float_prompt)
+            reformatted_prediction = model_eval.get_response_from_model(
+                model_name=model_name,
+                prompt=convert_to_float_prompt,
+                temperature=meta_temperature,
+            )
+
+            meta_prediction = string_utils.extract_ci_with_stars(reformatted_prediction)
+            # print("======REFORMATTING OUTPUT======")
+
+            # print(meta_prediction)
+        
+            
+        else:
+            meta_prediction = [float(b) for b in meta_prediction]
+            
+
+        # print (meta_prediction)
+    elif answer_type == "probability":
         # Get the probability from the meta-reasoning
         meta_prediction = string_utils.extract_probability_with_stars(meta_reasoning)
         if meta_prediction is None or meta_prediction < 0.0 or meta_prediction > 1.0:

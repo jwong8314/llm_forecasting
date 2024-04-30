@@ -24,6 +24,12 @@ PROMPT_DICT = {
             "new_5": BINARY_SCRATCH_PAD_PROMPT_NEW_5,
             "new_6": BINARY_SCRATCH_PAD_PROMPT_NEW_6,
             "new_7": BINARY_SCRATCH_PAD_PROMPT_NEW_7,
+            "quant_1": BINARY_SCRATCH_PAD_PROMPT_QUANT_1,
+            "quant_2": BINARY_SCRATCH_PAD_PROMPT_QUANT_2,
+            "quant_3": BINARY_SCRATCH_PAD_PROMPT_QUANT_3,
+            "quant_6": BINARY_SCRATCH_PAD_PROMPT_QUANT_6,
+
+
         },
         "rar": {
             "0": RAR_PROMPT_0,
@@ -68,6 +74,7 @@ PROMPT_DICT = {
     "meta_reasoning": {
         "0": ENSEMBLE_PROMPT_0,
         "1": ENSEMBLE_PROMPT_1,
+        "quant_0": ENSEMBLE_PROMPT_QUANT_0,
     },
     "system": {
         "0": SYSTEM_SUPERFORECASTER_0,
@@ -76,6 +83,7 @@ PROMPT_DICT = {
         "is_bad_title": IS_BAD_TITLE_PROMPT,
         "reformat": REFORMAT_PROMPT,
         "assign_category": ASSIGN_CATEGORY_PROMPT,
+        "time_to_float": TIME_TO_FLOAT_PROMPT,
     },
     "base_eval": {
         "knowledge": KNOWLEDGE_PROMPT,
@@ -84,4 +92,5 @@ PROMPT_DICT = {
         "scratch_pad": BINARY_SCRATCH_PAD_PROMPT,
         "gemini_scratch_pad": GEMINI_BINARY_SCRATCH_PAD_PROMPT,
     },
+    
 }

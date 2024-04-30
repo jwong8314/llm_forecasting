@@ -62,6 +62,7 @@ def get_prompt(
     summary=None,
     few_shot_examples=None,
     max_words=None,
+    candidate_ci=None,
 ):
     """
     Fill in a prompt template with specific data based on provided fields.
@@ -89,6 +90,7 @@ def get_prompt(
             the 'FEW_SHOT_EXAMPLES' placeholder.
         max_words (int, optional): Maximum number of words for the 'MAX_WORDS'
             used for search query generation.
+        candidate_ci (str, optional): Candidate confidence interval for the
 
     Returns:
         str: A string with the placeholders in the template replaced with the provided
@@ -126,6 +128,9 @@ def get_prompt(
             mapping["summary"] = summary
         elif f == "DATA_SOURCE":
             mapping["data_source"] = data_source
+        elif f == "CANDIDATE_CI":
+            mapping["candidate_ci"] = candidate_ci
+        
     return prompt_template.format(**mapping)
 
 
@@ -190,6 +195,48 @@ def extract_probability_with_stars(text):
 
     return 0.5
 
+def extract_ci_with_stars(text):
+    """
+    Extract a probability value from a given text string.
+
+    The function searches for numbers enclosed in asterisks (*), interpreting
+    them as potential probability values. If a percentage sign is found with
+    the number, it's converted to a decimal. The function returns the last
+    number found that is less than or equal to 1, as a probability should be.
+    If no such number is found, a default probability of 0.5 is returned.
+
+    Args:
+    - text (str): The text string from which the probability value is to be
+    extracted.
+
+    Returns:
+    - float: The extracted probability value, if found. Otherwise, returns 0.5.
+    """
+    # Regular expression to find numbers between stars
+    pattern = r"\*(.*?[\d\.]+.*?,.*?[\d\.].*?)\*"
+    matches = re.findall(pattern, text)
+
+    # Extracting the numerical values from the matches
+    extracted_numbers = []
+    for match in matches:
+        # Extract only the numerical part (ignoring potential non-numeric
+        # characters)
+        
+        lb_pattern = r"\[(.*?),"
+        lb_matches = re.findall(lb_pattern, match)
+        # Extracting the numerical values from the matches
+        lb = lb_matches[0]
+        
+        ub_pattern = r",(.*?)\]"
+        ub_matches = re.findall(ub_pattern, match)
+        # Extracting the numerical values from the matches
+        ub = ub_matches[0]
+        interval = [lb, ub]
+        
+        extracted_numbers.append(interval)
+
+    return None if len(extracted_numbers) == 0 else extracted_numbers[-1]
+        
 
 def extract_prediction(
     response,
@@ -216,6 +263,8 @@ def extract_prediction(
         return extract_probability_with_stars(response)
     elif answer_type == "tokens":
         return find_end_word(response, end_words)
+    elif answer_type == "confidence_interval":
+        return extract_ci_with_stars(response)
     else:
         raise ValueError(f"Invalid answer_type: {answer_type}")
 
