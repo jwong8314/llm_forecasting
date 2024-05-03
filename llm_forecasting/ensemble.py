@@ -9,6 +9,7 @@ from config.constants import TOKENS_TO_PROBS_DICT
 import model_eval
 from prompts.prompts import PROMPT_DICT
 from utils import string_utils, utils
+from quant_forecaster import quant_forecaster
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +52,7 @@ async def meta_reason(
     meta_model_name="gpt-4-1106-preview",
     meta_prompt_template=PROMPT_DICT["meta_reasoning"]["0"],
     meta_temperature=0.2,
+    dataframe = None,
 ):
     """
     Given a question and its retrieved articles, elicit model reasonings via
@@ -134,6 +136,11 @@ async def meta_reason(
         # list of lists (not flattened)
         all_base_reasonings.append(base_reasonings)
         all_base_reasoning_full_prompts.append(base_reasoning_full_prompts)
+    if dataframe is not None:
+        qforecast_reasonings = quant_forecaster( dataframe, question, background_info, resolution_criteria, model_name = meta_model_name)
+        import ipdb; ipdb.set_trace()
+        all_base_reasonings.append([qforecast_reasonings])
+    
     aggregation_dict = aggregate_base_reasonings(
         base_reasonings=all_base_reasonings,
         question=question,
@@ -273,7 +280,8 @@ def aggregate_base_reasonings(
         reasoning=concatenate_reasonings(flattened_base_reasonings),
         resolution_criteria=resolution_criteria,
     )
-    # print (meta_full_prompt)
+    
+    print (meta_full_prompt)
     meta_reasoning = model_eval.get_response_from_model(
         model_name=model_name,
         prompt=meta_full_prompt,
