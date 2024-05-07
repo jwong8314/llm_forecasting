@@ -14,50 +14,12 @@ import ranking
 import summarize
 from utils import db_utils
 import numpy as np
+from utils.metrics_utils import s0_linear, s0_oom
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def s0_linear(pred, x, c_multiplier=1):
-    "Calculate the linear score for a given x, L, and U."
-    L,U = pred[0], pred[1]
-    d = 1
-    U_trim = U 
-    L_trim = L  
-    c = c_multiplier * (U_trim - L_trim)
-    
-    if x < L:
-        score = (L - x) / c
-    elif L <= x <= U:
-        score = 0
-    elif x > U:
-        score = (x - U) / c
-    
-    s_final = 1 - 10 * ( 0.8*(1/2) * ((U - L) / c) + score )
-    
-    return s_final
-
-
-def s0_oom(pred, x, c_multiplier=1):
-    "Calculate the order of magnitude score for a given x, L, and U."
-    L,U = pred[0], pred[1]
-
-    d = 1
-    U_trim = U 
-    L_trim = L  
-    c = c_multiplier * np.log(U_trim / L_trim)
-    
-    if x < L:
-        score = np.log(L / x) / c
-    elif L <= x <= U:
-        score = 0
-    elif x > U:
-        score = np.log(x / U) / c
-    
-    s_final = 1 - 10 * ( 0.8*(1/2) * (np.log(U / L) / c) + score )
-    
-    return s_final
 
 def to_eval(question, retrieval_number, output_dir):
     """

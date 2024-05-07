@@ -224,16 +224,20 @@ def extract_ci_with_stars(text):
         
         lb_pattern = r"\[(.*?),"
         lb_matches = re.findall(lb_pattern, match)
-        # Extracting the numerical values from the matches
-        lb = lb_matches[0]
-        
+
         ub_pattern = r",(.*?)\]"
         ub_matches = re.findall(ub_pattern, match)
-        # Extracting the numerical values from the matches
-        ub = ub_matches[0]
-        interval = [lb, ub]
         
-        extracted_numbers.append(interval)
+        if len(ub_matches) == 0  or len(lb_matches) == 0:
+            interval = None
+        else:
+            # Extracting the numerical values from the matches
+            lb = lb_matches[0]
+            ub = ub_matches[0]
+            interval = [lb, ub]
+
+        if interval is not None:
+            extracted_numbers.append(interval)
 
     return None if len(extracted_numbers) == 0 else extracted_numbers[-1]
         

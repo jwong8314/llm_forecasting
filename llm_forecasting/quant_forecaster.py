@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import model_eval
 
-def quant_forecaster( df, forecast_question, background, resolution_criteria, model_name = "gpt-4-turbo", description='2020-2021, so you have no access to data from 2022'):
+def quant_forecaster( df, forecast_question, background, resolution_criteria, model_name = "gpt-4-turbo", date_description='2020-2021, so you have no access to data from 2022', df_description=''):
     """
     Perform quantitative forecasting based on a given question and a pandas dataframe.
 
@@ -25,13 +25,19 @@ def quant_forecaster( df, forecast_question, background, resolution_criteria, mo
         example_row += str(v) + ' for the ' + str(c) + ' column, '
         
     br_msg_sys = ("You are a helpful AI specialized in quantitative forecasting answering "+
-            f"the question: {forecast_question}? You are provided a python pandas historical ({description}) dataframe with "+
+            f"the question: {forecast_question}? You are provided a python pandas historical ({date_description}) dataframe with "+
             f"the columns being: {str(df.columns)} and the corresponding columns types: {str(df.dtypes)}. For example, {example_row}. ")
     br_msg_usr = ("Generate three (3) questions that can be simply answered with pandas code applied to "+
-            "the dataframe provided, denoted as 'df', that also can answer the forecasting question. These questions should result ONLY in numerical values. Make a very clear note of what each row of the dataframe is, and make sure your questions answer the provided question given what each row AND column represent."+
+            f"the dataframe provided, denoted as 'df', that also can answer the forecasting question. The dataframe comes with the description:\n {df_description}\n These questions should result ONLY in numerical values. Make a very clear note of what each row of the dataframe is, and make sure your questions answer the provided question given what each row AND column represent."+
             "Only provide the questions, and NOT the code. Do not use vague phrases like specific subset, "+
             "specific sub/target category, or some value. You must be specific and make judgement calls "+
-            "on thresholds, ranges, or values. Wrap the questions in ** and ** like: **<insert question here>**.")
+            """on thresholds, ranges, or values. 
+Here are three types of helpful questions: 
+1. Base rates historically: questions that ask about the average over the data available in the dataset.
+2. Recent trends: questions that ask about recent values in the dataset.
+3. Extreme values: questions about outlier values (min/max) historically can help with estimating the range of values.
+""" +
+            "Wrap the questions in ** and ** like: **<insert question here>**.")
             
     br_llm = model_eval.get_response_from_model(
         model_name=model_name,
@@ -57,7 +63,7 @@ def quant_forecaster( df, forecast_question, background, resolution_criteria, mo
     Start all code with ```python\n and end all code with \n```. Assume """+
                 "that the code you generate will be directly inputted into an 'eval' function to be run, so it must be correct. Additionally, make sure the code outputs a number. ")
         
-        df_msg_usr = f"Generate single line/one-liner code for the following question: {q}"
+        df_msg_usr = f"Generate single line/one-liner code for the following question: {q}. \n Remember the dataset only has data up to 2019."
         df_llm = model_eval.get_response_from_model(
             model_name=model_name,
             prompt=df_msg_usr,
@@ -71,23 +77,28 @@ def quant_forecaster( df, forecast_question, background, resolution_criteria, mo
         #q_response = q_response.split("```python")[1].split("\n```")[0]
         #print(re.findall(pattern, q_response))
         print(q_response)
-        q_response = re.findall(r"\`\`\`python\n(.*?)\n\`\`\`", q_response)[0].strip() #.split("```python")[1].split("\n```")[0]
+        q_response = re.findall(r"\`\`\`python\n(.*?)\n\`\`\`", q_response, re.DOTALL)[0].strip() #.split("```python")[1].split("\n```")[0]
         #print('----')
         #print(f' output value: {eval(q_response)}')
-        operations = q_response.split(";")
+        operations = q_response.replace("\n", ";").split(";")
         res = None
         for operation in operations:
-            res = eval(operation)
+            try :
+                res = eval(operation)
+            except Exception as e:
+                res = str(e)
+                
         
         br_answers.append(res)
 
     base_reasonings = list(zip(br_questions, br_answers))
+    base_reasonings_str = "\n".join([f"\nQuestion: {q}\nAnswer: {a}" for q, a in base_reasonings])
 
     forecast_msg_sys = """You are an expert superforecaster, familiar with the work of Tetlock and others.
     Your mission is to generate accurate predictions for forecasting questions.
     Aggregate the information provided by the user. Make sure to give detailed reasonings."""
     forecast_msg_usr = (f"I need your assistance with making a forecast. Here is the question and its metadata. \n\nQuestion: {forecast_question}\n\nBackground: {background}\n\nResolution criteria: {resolution_criteria}"+
-                f"In addition, I have generated a collection of other responses and reasonings from other forecasters, below are some of the common questions and answers: {base_reasonings} Your goal is to aggregate the information and make a final prediction."+
+                f"\nIn addition, I have generated a collection of other responses and reasonings from other forecasters, below are some of the common questions and answers: {base_reasonings_str} \nYour goal is to aggregate the information and make a final prediction."+
                 """Instructions:
     1. Provide reasons why the answer might be high.
     {{ Insert your thoughts here }}
@@ -105,7 +116,7 @@ def quant_forecaster( df, forecast_question, background, resolution_criteria, mo
         prompt=forecast_msg_usr,
         system_prompt=forecast_msg_sys,
     )
-    quant_questions = f"""I have generated a collection of other responses and reasonings from other forecasters, below are some of the common questions and answers: {base_reasonings}\n\n"""
+    quant_questions = f"""I have generated a collection of other responses and reasonings from other forecasters, below are some of the common questions and answers: {base_reasonings_str}\n\n"""
     print (ff_llm)
 
     return quant_questions + ff_llm

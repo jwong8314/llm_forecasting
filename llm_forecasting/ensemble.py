@@ -53,6 +53,8 @@ async def meta_reason(
     meta_prompt_template=PROMPT_DICT["meta_reasoning"]["0"],
     meta_temperature=0.2,
     dataframe = None,
+    df_date_description = None,
+    df_description = None
 ):
     """
     Given a question and its retrieved articles, elicit model reasonings via
@@ -137,8 +139,9 @@ async def meta_reason(
         all_base_reasonings.append(base_reasonings)
         all_base_reasoning_full_prompts.append(base_reasoning_full_prompts)
     if dataframe is not None:
-        qforecast_reasonings = quant_forecaster( dataframe, question, background_info, resolution_criteria, model_name = meta_model_name)
-        import ipdb; ipdb.set_trace()
+        qforecast_reasonings = quant_forecaster( dataframe, question, background_info, resolution_criteria, model_name = base_model_name, date_description= df_date_description, df_description = df_description)
+        print(qforecast_reasonings)
+        # import ipdb; ipdb.set_trace()
         all_base_reasonings.append([qforecast_reasonings])
     
     aggregation_dict = aggregate_base_reasonings(
@@ -280,58 +283,78 @@ def aggregate_base_reasonings(
         reasoning=concatenate_reasonings(flattened_base_reasonings),
         resolution_criteria=resolution_criteria,
     )
-    
-    print (meta_full_prompt)
-    meta_reasoning = model_eval.get_response_from_model(
-        model_name=model_name,
-        prompt=meta_full_prompt,
-        temperature=meta_temperature,
-    )  # raw response
-    # Extract final prediction from raw response
-    if answer_type == "confidence_interval":
-        meta_prediction = string_utils.extract_ci_with_stars(meta_reasoning) # this doesn't postprocess
-        prompt, fields = PROMPT_DICT["data_wrangling"]["time_to_float"]
-        if (":" in meta_prediction[0] or ":" in meta_prediction[1]):
-            convert_to_float_prompt = string_utils.get_prompt(
-            prompt,
-            fields,
-            question=question,
-            candidate_ci=str(meta_prediction))
-            # print("======REFORMATTING PROMPT======")
-            # print (convert_to_float_prompt)
-            reformatted_prediction = model_eval.get_response_from_model(
-                model_name=model_name,
-                prompt=convert_to_float_prompt,
-                temperature=meta_temperature,
-            )
+    for _ in range(3):
+        # print (meta_full_prompt)
+        meta_reasoning = model_eval.get_response_from_model(
+            model_name=model_name,
+            prompt=meta_full_prompt,
+            temperature=meta_temperature,
+        )  # raw response
+        # Extract final prediction from raw response
+        if answer_type == "confidence_interval":
+            meta_prediction = string_utils.extract_ci_with_stars(meta_reasoning) # this doesn't postprocess
+            if meta_prediction is None:
+                continue
+            if (":" in meta_prediction[0] or ":" in meta_prediction[1]):
+                prompt, fields = PROMPT_DICT["data_wrangling"]["time_to_float"]
 
-            meta_prediction = string_utils.extract_ci_with_stars(reformatted_prediction)
-            # print("======REFORMATTING OUTPUT======")
+                convert_to_float_prompt = string_utils.get_prompt(
+                prompt,
+                fields,
+                question=question,
+                candidate_ci=str(meta_prediction))
+                # print("======REFORMATTING PROMPT======")
+                # print (convert_to_float_prompt)
+                reformatted_prediction = model_eval.get_response_from_model(
+                    model_name=model_name,
+                    prompt=convert_to_float_prompt,
+                    temperature=meta_temperature,
+                )
 
-            # print(meta_prediction)
-        
-            
-        else:
-            meta_prediction = [float(b) for b in meta_prediction]
-            
+                meta_prediction = string_utils.extract_ci_with_stars(reformatted_prediction)
+                # print("======REFORMATTING OUTPUT======")
 
-        # print (meta_prediction)
-    elif answer_type == "probability":
-        # Get the probability from the meta-reasoning
-        meta_prediction = string_utils.extract_probability_with_stars(meta_reasoning)
-        if meta_prediction is None or meta_prediction < 0.0 or meta_prediction > 1.0:
-            logger.debug(
-                "final_answer {} is not between 0 and 1".format(meta_prediction)
-            )
-            meta_prediction = 0.5
-    elif answer_type == "tokens":
-        # Get the final token answer from the meta-reasoning
-        meta_prediction = string_utils.find_end_word(meta_reasoning, end_words)
-        if meta_prediction is None or not string_utils.is_string_in_list(
-            meta_prediction, end_words
-        ):
-            logger.debug("final_answer {} is not valid".format(meta_prediction))
-            meta_prediction = "Slightly Unlikely"
+                # print(meta_prediction)
+            elif ("%" in meta_prediction[0] or "%" in meta_prediction[1]):
+                def percent_to_float(percent_str):
+                    if "%" in percent_str:
+                        return float(percent_str.strip("%")) / 100
+                    else:
+                        return float(percent_str)
+                meta_prediction = [percent_to_float(b) for b in meta_prediction]
+                
+            else:
+                def cleaner(b):
+                    b = b.replace("\\", "")
+                    b = b.replace ("$","")
+                    b = b.replace("B", "000000000")
+                    b = b.replace("M", "000000")
+                    return b
+                    
+                     
+                meta_prediction = [float(cleaner(b)) for b in meta_prediction]
+            break
+                
+
+            # print (meta_prediction)
+        elif answer_type == "probability":
+            # Get the probability from the meta-reasoning
+            meta_prediction = string_utils.extract_probability_with_stars(meta_reasoning)
+            if meta_prediction is None or meta_prediction < 0.0 or meta_prediction > 1.0:
+                logger.debug(
+                    "final_answer {} is not between 0 and 1".format(meta_prediction)
+                )
+                meta_prediction = 0.5
+                break
+        elif answer_type == "tokens":
+            # Get the final token answer from the meta-reasoning
+            meta_prediction = string_utils.find_end_word(meta_reasoning, end_words)
+            if meta_prediction is None or not string_utils.is_string_in_list(
+                meta_prediction, end_words
+            ):
+                logger.debug("final_answer {} is not valid".format(meta_prediction))
+                meta_prediction = "Slightly Unlikely"
+            break
 
     return {
         "base_reasonings": base_reasonings,
