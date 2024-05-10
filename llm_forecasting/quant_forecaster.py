@@ -31,7 +31,8 @@ def quant_forecaster( df, forecast_question, background, resolution_criteria, mo
             f"the dataframe provided, denoted as 'df', that also can answer the forecasting question. The dataframe comes with the description:\n {df_description}\n These questions should result ONLY in numerical values. Make a very clear note of what each row of the dataframe is, and make sure your questions answer the provided question given what each row AND column represent."+
             "Only provide the questions, and NOT the code. Do not use vague phrases like specific subset, "+
             "specific sub/target category, or some value. You must be specific and make judgement calls "+
-            """on thresholds, ranges, or values. 
+            """on thresholds, ranges, or values. """ + 
+"""
 Here are three types of helpful questions: 
 1. Base rates historically: questions that ask about the average over the data available in the dataset.
 2. Recent trends: questions that ask about recent values in the dataset.
@@ -63,7 +64,7 @@ Here are three types of helpful questions:
     Start all code with ```python\n and end all code with \n```. Assume """+
                 "that the code you generate will be directly inputted into an 'eval' function to be run, so it must be correct. Additionally, make sure the code outputs a number. ")
         
-        df_msg_usr = f"Generate single line/one-liner code for the following question: {q}. \n Remember the dataset only has data up to 2019."
+        df_msg_usr = f"Generate single line/one-liner code for the following question: {q}."
         df_llm = model_eval.get_response_from_model(
             model_name=model_name,
             prompt=df_msg_usr,
@@ -88,7 +89,7 @@ Here are three types of helpful questions:
             except Exception as e:
                 res = str(e)
                 
-        
+        print (res)
         br_answers.append(res)
 
     base_reasonings = list(zip(br_questions, br_answers))

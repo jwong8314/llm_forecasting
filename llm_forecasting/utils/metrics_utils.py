@@ -122,13 +122,12 @@ def compute_bs_and_crowd_bs(pred, date_pred_list, retrieve_date, answer):
 
 
 
-def s0_linear(pred, x, c_multiplier=1):
+def s0_linear(pred, x, c=1, beta = 0.8):
     "Calculate the linear score for a given x, L, and U."
     L,U = pred[0], pred[1]
     d = 1
-    U_trim = U 
-    L_trim = L  
-    c = c_multiplier * (U_trim - L_trim)
+
+   
     
     if x < L:
         score = (L - x) / c
@@ -137,19 +136,19 @@ def s0_linear(pred, x, c_multiplier=1):
     elif x > U:
         score = (x - U) / c
     
-    s_final = 1 - 10 * ( 0.8*(1/2) * ((U - L) / c) + score )
+    s_final = d - 10 * ( (1-beta)*(1/2) * ((U - L) / c) + score )
     
     return s_final
 
 
-def s0_oom(pred, x, c_multiplier=1):
+def s0_oom(pred, x, c=1, beta = 0.8):
     "Calculate the order of magnitude score for a given x, L, and U."
+    if pred[0] == 0:
+        pred[0] = 0.000001
     L,U = pred[0], pred[1]
 
     d = 1
-    U_trim = U 
-    L_trim = L  
-    c = c_multiplier * np.log(U_trim / L_trim)
+    
     
     if x < L:
         score = np.log(L / x) / c
@@ -158,6 +157,6 @@ def s0_oom(pred, x, c_multiplier=1):
     elif x > U:
         score = np.log(x / U) / c
     
-    s_final = 1 - 10 * ( 0.8*(1/2) * (np.log(U / L) / c) + score )
+    s_final = d - 10 * ( (1-beta)*(1/2) * (np.log(U / L) / c) + score )
     
     return s_final

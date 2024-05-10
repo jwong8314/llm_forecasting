@@ -67,6 +67,7 @@ def get_formatted_data(
         "category_list": [],
     }
     raw_data = []
+    import ipdb; ipdb.set_trace()
     for q in data:
         q["date_close"] = q["date_close"] or q["date_resolve_at"]
         retrieval_date = time_utils.get_retrieval_date(

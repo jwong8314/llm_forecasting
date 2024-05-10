@@ -28,6 +28,10 @@ PROMPT_DICT = {
             "quant_2": BINARY_SCRATCH_PAD_PROMPT_QUANT_2,
             "quant_3": BINARY_SCRATCH_PAD_PROMPT_QUANT_3,
             "quant_6": BINARY_SCRATCH_PAD_PROMPT_QUANT_6,
+            "quant_50_1": BINARY_SCRATCH_PAD_PROMPT_QUANT_50_1,
+            "quant_50_2": BINARY_SCRATCH_PAD_PROMPT_QUANT_50_2,
+            "quant_50_3": BINARY_SCRATCH_PAD_PROMPT_QUANT_50_3,
+            "quant_50_6": BINARY_SCRATCH_PAD_PROMPT_QUANT_50_6,
 
 
         },
@@ -75,6 +79,7 @@ PROMPT_DICT = {
         "0": ENSEMBLE_PROMPT_0,
         "1": ENSEMBLE_PROMPT_1,
         "quant_0": ENSEMBLE_PROMPT_QUANT_0,
+        "quant_50_0": ENSEMBLE_PROMPT_QUANT_0,
     },
     "system": {
         "0": SYSTEM_SUPERFORECASTER_0,
